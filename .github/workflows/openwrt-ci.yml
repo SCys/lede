@@ -1,4 +1,4 @@
-# 
+#
 # <https://github.com/KFERMercer/OpenWrt-CI>
 #
 # Copyright (C) 2019 P3TERX
@@ -14,9 +14,7 @@ on:
     types: [published]
 
 jobs:
-
   build_openwrt:
-
     name: Build OpenWrt firmware
 
     runs-on: ubuntu-latest
@@ -24,7 +22,6 @@ jobs:
     if: github.event.repository.owner.id == github.event.sender.id
 
     steps:
-
       - name: Checkout
         uses: actions/checkout@v2
         with:
@@ -42,8 +39,6 @@ jobs:
           sudo -E apt-get -y autoremove --purge
           sudo -E apt-get clean
 
-          df -h
-
       - name: Update feeds
         run: |
           sed -i 's/#src-git helloworld/src-git helloworld/g' ./feeds.conf.default
@@ -55,7 +50,7 @@ jobs:
 
       - name: Make download
         run: |
-          make download -j8
+          make download -j16
           find dl -size -1024c -exec rm -f {} \;
 
       - name: Compile firmware
@@ -97,13 +92,19 @@ jobs:
         with:
           name: OpenWrt_firmware
           path: ./bin/targets/
-  
+
+      - name: Archive firmware
+        uses: actions/upload-artifact@v2
+        with:
+          name: firmware
+          path: ./artifact/firmware/*
 
       - name: Upload release asset
         if: github.event == 'release'
         uses: svenstaro/upload-release-action@v2
         with:
-          repo_token: ${{ secrets.YOURTOKEN }}
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
           file: ./artifact/firmware/*
           tag: ${{ github.ref }}
           file_glob: true
+          overwrite: true
